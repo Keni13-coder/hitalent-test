@@ -1,0 +1,77 @@
+networks:
+  backend:
+    driver: bridge
+    name: ${PROJECT_NAME}_backend
+
+volumes:
+  db-data:
+  redis-data:
+
+x-build-app: &build-app
+  env_file:
+    - .env
+  volumes:
+    - .:/app
+  networks:
+    - backend
+
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    container_name: ${PROJECT_NAME}_app
+    <<: *build-app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  test-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    container_name: ${PROJECT_NAME}_test_app
+    <<: *build-app
+
+
+  db:
+    image: postgres:latest
+    container_name: ${PROJECT_NAME}_db
+    expose:
+      - "5432"
+    volumes:
+      - db-data:/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgresql}
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+  redis:
+    image: redis:latest
+    container_name: ${PROJECT_NAME}_redis
+    expose:
+      - "6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+  
