@@ -14,7 +14,7 @@ async def test_quest_create(quest_repository):
         'text': 'test',
     }
     return_id = await quest_repository.create(data)
-    
+    await quest_repository.session.commit()
     assert return_id
 
     ids['quest_id'] = return_id
@@ -28,6 +28,7 @@ async def test_answer_create(answer_repository):
         
     }
     return_id = await answer_repository.create(data)
+    await answer_repository.session.commit()
     
     assert return_id
     ids['answer_id'] = return_id
@@ -49,7 +50,8 @@ async def test_quest_get_all(quest_repository_with_data):
 @pytest.mark.asyncio(loop_scope='module')
 async def test_quest_delete(quest_repository):
     await quest_repository.delete(ids['quest_id'])
-
+    await quest_repository.session.commit()
+    
 @pytest.mark.asyncio(loop_scope='module')
 async def test_answer_get_one(answer_repository):
     

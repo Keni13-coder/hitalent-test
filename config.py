@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra='ignore')
     
     MODE: Literal['test', 'dev', 'prod'] = 'test'
+    ALLOWED_HOSTS : list[str] = ['localhost:3000']
     POSTGRESQL_URL: str
     REDIS_URL: str
     
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
     
     @property
     def postgres_url(self):
-        return f'postgresql+asyncpg://{self.POSTGRESQL_URL}'
+        return f'postgresql+asyncpg://{self.POSTGRESQL_URL}{"_test" if self.MODE == "test" else ""}'
 
 def init_logger():     
     logger.add(
